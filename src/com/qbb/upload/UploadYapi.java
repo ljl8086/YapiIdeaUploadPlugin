@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+
 /**
  * 上传到yapi
  *
@@ -60,6 +61,9 @@ public class UploadYapi {
         this.changeDesByPath(yapiSaveParam);
         YapiResponse yapiResponse= this.getCatIdOrCreate(yapiSaveParam);
         if(yapiResponse.getErrcode()==0){
+            yapiSaveParam.setCatid(yapiResponse.getCatId());
+            System.out.println(String.format("url: %s \n, para: %s \n", yapiSaveParam.getYapiUrl()+YapiConstant.yapiSave,  gson.toJson(yapiSaveParam)));
+
             String response=HttpClientUtil.ObjectToString(HttpClientUtil.getHttpclient().execute(this.getHttpPost(yapiSaveParam.getYapiUrl()+YapiConstant.yapiSave,gson.toJson(yapiSaveParam))),"utf-8");
             YapiResponse yapiResponseResult= gson.fromJson(response,YapiResponse.class);
             yapiResponseResult.setCatId(yapiSaveParam.getCatid());
@@ -151,50 +155,40 @@ public class UploadYapi {
      * @return: com.qbb.dto.YapiResponse
      * @author: chengsheng@qbb6.com
      * @date: 2019/5/15
-     */ 
+     */
     public YapiResponse getCatIdOrCreate(YapiSaveParam yapiSaveParam){
+        YapiResponse res = new YapiResponse();
+
         // 如果缓存不存在，切自定义菜单为空，则使用默认目录
         if(Strings.isNullOrEmpty(yapiSaveParam.getMenu())){
             yapiSaveParam.setMenu(YapiConstant.menu);
         }
-        String response= null;
         try {
-            response = HttpClientUtil.ObjectToString(HttpClientUtil.getHttpclient().execute(this.getHttpGet(yapiSaveParam.getYapiUrl()+ YapiConstant.yapiCatMenu+"?project_id="+yapiSaveParam.getProjectId()+"&token="+yapiSaveParam.getToken())),"utf-8");
+            String response = HttpClientUtil.ObjectToString(HttpClientUtil.getHttpclient().execute(this.getHttpGet(yapiSaveParam.getYapiUrl()+ YapiConstant.yapiCatMenu+"?project_id="+yapiSaveParam.getProjectId()+"&token="+yapiSaveParam.getToken())),"utf-8");
             YapiResponse yapiResponse=gson.fromJson(response,YapiResponse.class);
             if(yapiResponse.getErrcode()==0) {
                 List<YapiCatResponse> list = (List<YapiCatResponse>) yapiResponse.getData();
-                list=gson.fromJson(gson.toJson(list),new TypeToken<List<YapiCatResponse>>() {
-                }.getType());
+                list=gson.fromJson(gson.toJson(list),new TypeToken<List<YapiCatResponse>>() {}.getType());
                 String[] menus=yapiSaveParam.getMenu().split("/");
-                // 循环多级菜单，判断是否存在，如果不存在就创建
-                //  解决多级菜单创建问题
-                Integer parent_id=-1;
-                Integer now_id=null;
-                for(int i=0;i<menus.length;i++){
-                    if(Strings.isNullOrEmpty(menus[i])){
-                        continue;
-                    }
-                    boolean needAdd=true;
-                    now_id=null;
-                    for (YapiCatResponse yapiCatResponse : list) {
-                        if (yapiCatResponse.getName().equals(menus[i])) {
-                            needAdd=false;
-                            now_id=yapiCatResponse.get_id();
-                            break;
-                        }
-                    }
-                    if(needAdd){
-                         now_id=this.addMenu(yapiSaveParam,parent_id,menus[i]);
-                    }
-                    if(i==(menus.length-1)) {
-                        yapiSaveParam.setCatid(now_id.toString());
-                    }else{
-                        parent_id=now_id;
+                int parentId = -1;
+                for (String menu:menus) {
+                    int finalParentId = parentId;
+                    YapiCatResponse menuRes = list.stream()
+                            .filter(item->item.getName().equalsIgnoreCase(menu) && item.getParent_id() == finalParentId)
+                            .findFirst()
+                            .orElse(null)
+                            ;
+                    if (menuRes == null) {
+                        parentId = addMenu(yapiSaveParam, parentId, menu);
+                    }else {
+                        parentId = menuRes.get_id();
                     }
                 }
+                res.setCatId(parentId+"");
             }
-            return  new YapiResponse();
+            return  res;
         } catch (Exception e) {
+            e.printStackTrace();
             try {
                 //出现这种情况可能是yapi 版本不支持
                 yapiSaveParam.setCatid(addMenu(yapiSaveParam,-1,yapiSaveParam.getMenu()).toString());
@@ -203,6 +197,19 @@ public class UploadYapi {
             }
             return  new YapiResponse(0,e.toString());
         }
+    }
+
+    public static void main(String[] args) {
+        UploadYapi uploadYapi = new UploadYapi();
+
+        YapiSaveParam param = new YapiSaveParam();
+        param.setProjectId(216);
+        param.setToken("7e504e0fddf5d568d34f2c9985de939a2b2666811ccd2a4ab88d22e7221ff060");
+        param.setYapiUrl("https://yapi.ekuaibao.com/");
+        param.setMenu("企业端/订单");
+        YapiResponse res = uploadYapi.getCatIdOrCreate(param);
+
+        System.out.println();
     }
 
 

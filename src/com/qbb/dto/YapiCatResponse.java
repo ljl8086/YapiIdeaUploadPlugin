@@ -34,6 +34,11 @@ public class YapiCatResponse implements Serializable {
      */
     private Integer index;
 
+    /**
+     * 父id
+     */
+    private Integer parent_id;
+
 
     public Integer get_id() {
         return _id;
@@ -82,4 +87,13 @@ public class YapiCatResponse implements Serializable {
     public void setIndex(Integer index) {
         this.index = index;
     }
+
+    public Integer getParent_id() {
+        return parent_id;
+    }
+
+    public void setParent_id(Integer parent_id) {
+        this.parent_id = parent_id;
+    }
+
 }

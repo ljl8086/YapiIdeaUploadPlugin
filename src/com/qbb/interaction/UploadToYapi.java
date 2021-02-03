@@ -1,8 +1,6 @@
 package com.qbb.interaction;
 
 import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
@@ -11,8 +9,13 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.NlsContexts;
 import com.intellij.psi.PsiFile;
 import com.qbb.build.BuildJsonForDubbo;
 import com.qbb.build.BuildJsonForYapi;
@@ -29,6 +32,9 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * @description: 入口
  * @author: chengsheng@qbb6.com
@@ -43,8 +49,124 @@ public class UploadToYapi extends AnAction {
     }
 
 
+    /**
+     * 异步执行任务，防止界面卡死。
+     * @param e
+     */
     @Override
     public void actionPerformed(AnActionEvent e) {
+        ProgressManager.getInstance().runProcess(
+                () -> execute(e),
+                new ProgressIndicator() {
+                    @Override
+                    public void start() {
+
+                    }
+
+                    @Override
+                    public void stop() {
+
+                    }
+
+                    @Override
+                    public boolean isRunning() {
+                        return false;
+                    }
+
+                    @Override
+                    public void cancel() {
+
+                    }
+
+                    @Override
+                    public boolean isCanceled() {
+                        return false;
+                    }
+
+                    @Override
+                    public void setText(@NlsContexts.ProgressText String s) {
+
+                    }
+
+                    @Override
+                    public @NlsContexts.ProgressText String getText() {
+                        return null;
+                    }
+
+                    @Override
+                    public void setText2(@NlsContexts.ProgressDetails String s) {
+
+                    }
+
+                    @Override
+                    public @NlsContexts.ProgressDetails String getText2() {
+                        return null;
+                    }
+
+                    @Override
+                    public double getFraction() {
+                        return 0;
+                    }
+
+                    @Override
+                    public void setFraction(double v) {
+
+                    }
+
+                    @Override
+                    public void pushState() {
+
+                    }
+
+                    @Override
+                    public void popState() {
+
+                    }
+
+                    @Override
+                    public boolean isModal() {
+                        return true;
+                    }
+
+                    @Override
+                    public @NotNull
+                    ModalityState getModalityState() {
+                        return null;
+                    }
+
+                    @Override
+                    public void setModalityProgress(@Nullable ProgressIndicator progressIndicator) {
+
+                    }
+
+                    @Override
+                    public boolean isIndeterminate() {
+                        return false;
+                    }
+
+                    @Override
+                    public void setIndeterminate(boolean b) {
+
+                    }
+
+                    @Override
+                    public void checkCanceled() throws ProcessCanceledException {
+
+                    }
+
+                    @Override
+                    public boolean isPopupWasShown() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isShowing() {
+                        return false;
+                    }
+                });
+    }
+
+    private void execute(AnActionEvent e) {
         Editor editor = (Editor) e.getDataContext().getData(CommonDataKeys.EDITOR);
         Project project = editor.getProject();
         String projectToken = null;
