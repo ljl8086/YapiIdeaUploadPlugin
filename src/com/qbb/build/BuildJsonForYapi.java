@@ -631,13 +631,21 @@ public class BuildJsonForYapi {
 
     public static KV getPojoJson(Project project, PsiType psiType) throws JSONException {
         if (psiType instanceof PsiPrimitiveType) {
-            //如果是基本类型
-            KV kvClass = KV.create();
-            kvClass.set(psiType.getCanonicalText(), NormalTypes.normalTypes.get(psiType.getPresentableText()));
+            KV result = new KV();
+            String type = NormalTypes.java2JsonTypes.get(psiType.getPresentableText());
+            result.set("type", type);
+            result.set("title", psiType.getPresentableText());
+            result.set("description", psiType.getPresentableText());
+            result.set("mock", NormalTypes.formatMockType(type, null));
         } else if (NormalTypes.isNormalType(psiType.getPresentableText())) {
             //如果是包装类型
-            KV kvClass = KV.create();
-            kvClass.set(psiType.getCanonicalText(), NormalTypes.normalTypes.get(psiType.getPresentableText()));
+            KV result = new KV();
+            String type = NormalTypes.java2JsonTypes.get(psiType.getPresentableText());
+            result.set("type", type);
+            result.set("title", psiType.getPresentableText());
+            result.set("description", psiType.getPresentableText());
+            result.set("mock", NormalTypes.formatMockType(type, null));
+            return result;
         } else if (psiType.getPresentableText().startsWith("List")) {
             String[] types = psiType.getCanonicalText().split("<");
             KV listKv = new KV();
