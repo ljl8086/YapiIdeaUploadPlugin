@@ -317,7 +317,9 @@ public class BuildJsonForYapi {
 
             // 清空路径
             if (Strings.isNullOrEmpty(yapiApiDTO.getTitle())) {
-                yapiApiDTO.setTitle(DesUtil.getDescription(psiMethodTarget));
+                yapiApiDTO.setDesc(DesUtil.getDescription(psiMethodTarget));
+                yapiApiDTO.setTitle(getTitle(yapiApiDTO.getDesc()));
+
                 if (Objects.nonNull(psiMethodTarget.getDocComment())) {
                     // 支持菜单
                     String menu = DesUtil.getMenu(psiMethodTarget.getDocComment().getText());
@@ -342,6 +344,21 @@ public class BuildJsonForYapi {
             Notifications.Bus.notify(error, project);
         }
         return null;
+    }
+
+    private static String getTitle(String desc) {
+        if (desc.indexOf(".") > 0) {
+            return desc.substring(0, desc.indexOf("."));
+        }else if (desc.indexOf("。") > 0 ) {
+            return desc.substring(0, desc.indexOf("。"));
+        }else if (desc.indexOf("\n") > 0 ) {
+            return desc.substring(0, desc.indexOf("\n"));
+        }else if (desc.indexOf("<br>") > 0 ) {
+            return desc.substring(0, desc.indexOf("<br>"));
+        }else if (desc.indexOf("<br/>") > 0 ) {
+            return desc.substring(0, desc.indexOf("<br/>"));
+        }
+        return desc;
     }
 
     /**
@@ -1129,6 +1146,17 @@ public class BuildJsonForYapi {
         });
     }
 
-
+    public static void main(String[] args) {
+        String[] a = new String[]{
+                "adfsdf",
+                "的法大师傅。打发士大夫",
+                "的法大师傅.打发士大夫",
+                "的法大师傅.\n打发士大夫",
+                "的法大师傅<br>打发士大夫",
+        };
+        for (String s : a) {
+            System.out.println(getTitle(s));
+        }
+    }
 
 }
