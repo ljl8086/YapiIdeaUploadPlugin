@@ -55,115 +55,7 @@ public class UploadToYapi extends AnAction {
      */
     @Override
     public void actionPerformed(AnActionEvent e) {
-        ProgressManager.getInstance().runProcess(
-                () -> execute(e),
-                new ProgressIndicator() {
-                    @Override
-                    public void start() {
-
-                    }
-
-                    @Override
-                    public void stop() {
-
-                    }
-
-                    @Override
-                    public boolean isRunning() {
-                        return false;
-                    }
-
-                    @Override
-                    public void cancel() {
-
-                    }
-
-                    @Override
-                    public boolean isCanceled() {
-                        return false;
-                    }
-
-                    @Override
-                    public void setText(@NlsContexts.ProgressText String s) {
-
-                    }
-
-                    @Override
-                    public @NlsContexts.ProgressText String getText() {
-                        return null;
-                    }
-
-                    @Override
-                    public void setText2(@NlsContexts.ProgressDetails String s) {
-
-                    }
-
-                    @Override
-                    public @NlsContexts.ProgressDetails String getText2() {
-                        return null;
-                    }
-
-                    @Override
-                    public double getFraction() {
-                        return 0;
-                    }
-
-                    @Override
-                    public void setFraction(double v) {
-
-                    }
-
-                    @Override
-                    public void pushState() {
-
-                    }
-
-                    @Override
-                    public void popState() {
-
-                    }
-
-                    @Override
-                    public boolean isModal() {
-                        return true;
-                    }
-
-                    @Override
-                    public @NotNull
-                    ModalityState getModalityState() {
-                        return null;
-                    }
-
-                    @Override
-                    public void setModalityProgress(@Nullable ProgressIndicator progressIndicator) {
-
-                    }
-
-                    @Override
-                    public boolean isIndeterminate() {
-                        return false;
-                    }
-
-                    @Override
-                    public void setIndeterminate(boolean b) {
-
-                    }
-
-                    @Override
-                    public void checkCanceled() throws ProcessCanceledException {
-
-                    }
-
-                    @Override
-                    public boolean isPopupWasShown() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean isShowing() {
-                        return false;
-                    }
-                });
+        execute(e);
     }
 
     private void execute(AnActionEvent e) {
@@ -257,7 +149,9 @@ public class UploadToYapi extends AnAction {
             }
         } else if (ProjectTypeConstant.api.equals(projectType)) {
             //获得api 需上传的接口列表 参数对象
+            long t1 = System.currentTimeMillis();
             ArrayList<YapiApiDTO> yapiApiDTOS = new BuildJsonForYapi().actionPerformedList(e, attachUpload, returnClass);
+            System.out.println("抽取数据花费时间："+(System.currentTimeMillis()-t1));
             if (yapiApiDTOS != null) {
                 for (YapiApiDTO yapiApiDTO : yapiApiDTOS) {
                     YapiSaveParam yapiSaveParam = new YapiSaveParam(projectToken, yapiApiDTO.getTitle(), yapiApiDTO.getPath(), yapiApiDTO.getParams(), yapiApiDTO.getRequestBody(), yapiApiDTO.getResponse(), Integer.valueOf(projectId), yapiUrl, true, yapiApiDTO.getMethod(), yapiApiDTO.getDesc(), yapiApiDTO.getHeader());

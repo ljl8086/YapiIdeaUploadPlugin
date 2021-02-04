@@ -95,18 +95,22 @@ public class BuildJsonForYapi {
         ArrayList<YapiApiDTO> yapiApiDTOS = new ArrayList<>();
         if (Strings.isNullOrEmpty(selectedText) || selectedText.equals(selectedClass.getName())) {
             PsiMethod[] psiMethods = selectedClass.getMethods();
-            for (PsiMethod psiMethodTarget : psiMethods) {
-                //去除私有方法
-                if (!psiMethodTarget.getModifierList().hasModifierProperty("private") && Objects.nonNull(psiMethodTarget.getReturnType())) {
-                    YapiApiDTO yapiApiDTO = actionPerformed(selectedClass, psiMethodTarget, project, psiFile, attachUpload, returnClass);
-                    if (Objects.nonNull(yapiApiDTO)) {
-                        if (Objects.isNull(yapiApiDTO.getMenu())) {
-                            yapiApiDTO.setMenu(classMenu);
+            String      finalClassMenu = classMenu;
+            Arrays.stream(psiMethods)
+                    .filter(item -> !item.getModifierList().hasModifierProperty("private") && Objects.nonNull(item.getReturnType()))
+                    .forEach(psiMethodTarget -> {
+                        YapiApiDTO yapiApiDTO = actionPerformed(selectedClass, psiMethodTarget, project, psiFile, attachUpload, returnClass);
+                        if (yapiApiDTO == null) {
+                            return;
                         }
-                        yapiApiDTOS.add(yapiApiDTO);
-                    }
-                }
-            }
+
+                        if (Objects.isNull(yapiApiDTO.getMenu())) {
+                            yapiApiDTO.setMenu(finalClassMenu);
+                        }
+                        synchronized (yapiApiDTOS) {
+                            yapiApiDTOS.add(yapiApiDTO);
+                        }
+                    });
         } else {
             PsiMethod[] psiMethods = selectedClass.getAllMethods();
             //寻找目标Method
